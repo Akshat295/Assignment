@@ -32,10 +32,16 @@ jobs:
             set -e
             cd ~/app
 
-            if ! command -v node >/dev/null 2>&1; then
-              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-              sudo apt-get install -y nodejs
+            # Download and extract Node.js locally if not present
+            if [ ! -d "node-v18.16.0-linux-x64" ]; then
+              curl -O https://nodejs.org/dist/v18.16.0/node-v18.16.0-linux-x64.tar.xz
+              tar -xf node-v18.16.0-linux-x64.tar.xz
             fi
+
+            export PATH="$PWD/node-v18.16.0-linux-x64/bin:$PATH"
+
+            echo "Using Node.js version: $(node -v)"
+            echo "Using npm version: $(npm -v)"
 
             npm install --no-audit --no-fund
 
@@ -44,6 +50,6 @@ jobs:
             fi
 
             npx pm2 delete sayHelloAPI || true
-            npx pm2 start index.js --name sayHelloAPI
+            npx pm2 start server.js --name sayHelloAPI
             npx pm2 save
           EOF

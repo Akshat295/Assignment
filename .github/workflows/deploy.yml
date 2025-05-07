@@ -20,22 +20,30 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Copy code to VM
+      - name: Sync code to VM
         run: |
           rsync -avz --delete \
             -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
             ./ ${{ secrets.VM_USERNAME }}@${{ secrets.VM_HOST }}:/home/${{ secrets.VM_USERNAME }}/app/
 
-      - name: Install Node and Dependencies, Restart App
+      - name: Deploy on VM
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_HOST }} << 'EOF'
+            set -e
             cd ~/app
-            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-            npm install -g pm2
-            npm install
-            sudo pm2 delete all || true
-            sudo pm2 start index.js --name sayHelloAPI
-            sudo pm2 startup
-            sudo pm2 save
+
+            if ! command -v node >/dev/null 2>&1; then
+              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+
+            npm install --no-audit --no-fund
+
+            if [ ! -d "node_modules/pm2" ]; then
+              npm install pm2
+            fi
+
+            npx pm2 delete sayHelloAPI || true
+            npx pm2 start index.js --name sayHelloAPI
+            npx pm2 save
           EOF

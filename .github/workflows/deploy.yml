@@ -40,23 +40,10 @@ jobs:
             set -e
             cd ~/app
 
-            # Download and extract Node.js locally if not present
-            if [ ! -d "node-v18.16.0-linux-x64" ]; then
-              curl -O https://nodejs.org/dist/v18.16.0/node-v18.16.0-linux-x64.tar.xz
-              tar -xf node-v18.16.0-linux-x64.tar.xz
-            fi
-
-            export PATH="$PWD/node-v18.16.0-linux-x64/bin:$PATH"
-
-            echo "Using Node.js version: $(node -v)"
-            echo "Using npm version: $(npm -v)"
-
+            # Ensure dependencies are installed
             npm install --no-audit --no-fund
 
-            if [ ! -d "node_modules/pm2" ]; then
-              npm install pm2
-            fi
-
+            # Restart or start the app with PM2
             npx pm2 delete sayHelloAPI || true
             npx pm2 start server.js --name sayHelloAPI
             npx pm2 save

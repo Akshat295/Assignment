@@ -26,6 +26,14 @@ jobs:
             -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
             ./ ${{ secrets.VM_USERNAME }}@${{ secrets.VM_HOST }}:/home/${{ secrets.VM_USERNAME }}/app/
 
+      - name: Configure Firewall on VM to Allow HTTP Traffic (Port 80)
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_HOST }} << 'EOF'
+            sudo ufw allow 80/tcp
+            sudo ufw reload
+            sudo ufw status
+          EOF
+
       - name: Deploy on VM
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_HOST }} << 'EOF'

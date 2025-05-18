@@ -43,8 +43,12 @@ jobs:
             # Ensure dependencies are installed
             npm install --no-audit --no-fund
 
-            # Restart or start the app with PM2
-            npx pm2 delete sayHelloAPI || true
-            npx pm2 start server.js --name sayHelloAPI
+            # Start the app if not running, otherwise reload for zero downtime
+            if npx pm2 list | grep -q sayHelloAPI; then
+              npx pm2 reload sayHelloAPI
+            else
+              npx pm2 start server.js --name sayHelloAPI
+            fi
+
             npx pm2 save
           EOF
